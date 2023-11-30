@@ -1,0 +1,19 @@
+version: "3.3"
+
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./app:/app
+    command: >
+      sh -c "python app.py"
+    environment:
+      - ENV=${ENV}
+
+      # Github App
+      - local_github_app_id=${local_github_app_id}
+      - local_github_installation_id=${local_github_installation_id}
+      - local_github_private_key_path=${local_github_private_key_path}
