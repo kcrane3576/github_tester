@@ -1,5 +1,6 @@
 # github_tester
 Github API Issues
+- place github_private_key in root of `app/`
 
 ## Fresh build
 ```shell
