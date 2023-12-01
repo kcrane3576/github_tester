@@ -86,6 +86,7 @@ def get_repositories(url, headers):
         print('url: ', url)
         response = requests.get(url=url, headers=headers)
         repositories = response.json()
+        print('repositories: ', repositories)
         print(
             'repositories exists: ',
             repositories is not None,
