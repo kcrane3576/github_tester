@@ -21,7 +21,7 @@ ENV=local docker-compose down -v && \
 
 ## Comply with Github Support
 - Pull `token` from logs after running
-- `export TOKEN=` above token
+    - `export TOKEN=`
 - run:
     ```shell
     curl -v -L \
