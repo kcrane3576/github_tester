@@ -20,6 +20,10 @@ ENV=local docker-compose down -v && \
 ```
 
 ## Comply with Github Support
+### Hack
+- Run the program and output file with `"curl 'like' logs'"` will be written in `app/`
+
+### Backup
 - Pull `token` from logs after running
     - `export TOKEN=`
 - run:

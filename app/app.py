@@ -1,5 +1,9 @@
 import requests
+from datetime import datetime
+import logging_config as lc
 import environment_config as ec
+
+logger = lc.get_logger(__name__, 'DEBUG')
 
 
 AUTH_HEADER = 'auth'
@@ -28,27 +32,29 @@ def get_app_repositories():
             ),
         )
         app_repositories = app_repository_data['repositories']
-        print('get_app_repositories | len(app_repositories): ', len(app_repositories))
+        logger.debug('len(app_repositories): %s', len(app_repositories))
         for repo in app_repositories:
             if repo['name'] in MISSING_REPO_NAMES:
                 index = MISSING_REPO_NAMES.index(repo['name'])
                 MISSING_REPO_NAMES.pop(index)
 
         if not MISSING_REPO_NAMES:
-            print('Found MISSING_REPO_NAMES')
+            logger.debug('Found MISSING_REPO_NAMES')
         else:
-            print('Still MISSING_REPO_NAMES')
+            logger.debug('Still MISSING_REPO_NAMES')
 
     except Exception as e:
-        message = 'Unable to get_app_repositories: ' \
-            f'{repos_url}: {e}'
-        print(message)
+        logger.error(
+            'Unable to get_app_repositories: %s: %s',
+            repos_url,
+            e,
+        )
 
     return app_repositories
 
 
 def get_access_token_data(jwt_encoded, access_tokens_url):
-    print('access_tokens_url: ', access_tokens_url)
+    logger.debug('access_tokens_url: %s', access_tokens_url)
     github_access_token_data = None
     try:
         if jwt_encoded and access_tokens_url:
@@ -58,7 +64,7 @@ def get_access_token_data(jwt_encoded, access_tokens_url):
             )
 
             response = requests.post(url=access_tokens_url, headers=headers)
-            print('response.status_code: ', response.status_code)
+            logger.debug('response.status_code: %s', response.status_code)
 
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
             if response.status_code == 403:
@@ -67,15 +73,16 @@ def get_access_token_data(jwt_encoded, access_tokens_url):
             # https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/201
             if response.status_code == 201:
                 github_access_token_data = response.json()
-                print(
-                    'token exists: ',
+                logger.debug(
+                    'token exists: %s',
                     github_access_token_data['token'] is not None,
                 )
     except Exception as e:
-        message = f'Unable to retrieve token from: ' \
-            f'{access_tokens_url}: {e}'
-        print(message)
-
+        logger.error(
+            'Unable to retrieve token from: ',
+            access_tokens_url,
+            e,
+        )
 
     return github_access_token_data
 
@@ -83,18 +90,21 @@ def get_access_token_data(jwt_encoded, access_tokens_url):
 def get_repositories(url, headers):
     repositories = None
     try:
-        print('url: ', url)
+        logger.debug('url: %s', url)
         response = requests.get(url=url, headers=headers)
-        repositories = response.json()
-        print('repositories: ', repositories)
-        print(
-            'repositories exists: ',
-            repositories is not None,
-        )
+        logger.debug('response.status_code: %s', response.status_code)
+        if response.status_code == 200:
+            repositories = response.json()
+            logger.debug(
+                'repositories exists: %s',
+                repositories is not None,
+            )
+            write_curl_format_to_file(response)
+        else:
+            raise Exception(response.json())
     except Exception as e:
-        message = f'Unable to get_repositories at ({url}): {e}'
-        print(message)
-
+        logger.error(
+            'Unable to get_repositories at (%s): %s', url, e)
 
     return repositories
 
@@ -116,11 +126,31 @@ def get_headers(header_type, token):
             'Authorization': f'bearer {token}',
         }
     except Exception as e:
-        message = f'Unable to retrieve headers: ' \
-            f'{header_type} : {e}'
-        print(message)
+        logger.error('Unable to retrieve headers: ', header_type, e)
 
     return headers
+
+
+def write_curl_format_to_file(response):
+    request = response.request
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    filename = f'{current_date}-github-api.txt'
+
+    with open(filename, "a") as file:
+        # Write Request Details
+        file.write(f'*   Trying {request.url}...\n')
+        file.write(f'* Connected to {request.url} ({request.url}) port 80 (#0)\n')
+        file.write(f'> {request.method} {request.url} HTTP/1.1\n')
+        for header, value in request.headers.items():
+            file.write(f'> {header}: {value}\n')
+        if request.body:
+            file.write(f'> {request.body}\n')
+
+        # Write Response Details
+        file.write(f'< HTTP/1.1 {response.status_code} {response.reason}\n')
+        for header, value in response.headers.items():
+            file.write(f'< {header}: {value}\n')
+        file.write(f'< {response.text}\n')
 
 
 repositories = get_app_repositories()
