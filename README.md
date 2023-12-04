@@ -4,6 +4,7 @@ Github API Issues
 ## Setup
 - place github_private_key in root of `app/`
 - create `.env.local` file and populate values based on `sample.env.local`
+    - AWARENESS: `local_github_installation_id` will cause  `400` status_code if changed
 
 ## Fresh build
 ```shell
@@ -17,3 +18,16 @@ ENV=local docker-compose down -v && \
 ENV=local docker-compose down -v && \
     docker-compose --env-file .env.local up --build
 ```
+
+## Comply with Github Support
+- Pull `token` from logs after running
+- `export TOKEN=` above token
+- run:
+    ```shell
+    curl -v -L \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/installation/repositories
+    ```
+- Support Token Retrieval Docs: https://github.com/orgs/community/discussions/48186

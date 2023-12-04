@@ -34,6 +34,7 @@ def get_github_config():
             'private_key': get_private_key(),
             'installation_id': get_key_value('github_installation_id'),
         }
+        print('github_config', github_config)
     except Exception as e:
         message = f'Unable to get_github_config: {e}'
         print(message)
@@ -66,8 +67,6 @@ def get_private_key():
         print(message)
 
     return private_key
-
-
 
 
 def get_jwt_encoded(environment_config):
